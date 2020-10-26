@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
 import styled from '@emotion/styled';
+import PropTypes from 'prop-types';
+import { getDifferenceOfYear, totalByBrand, getPlan } from '../helper';
 
 const LabelContainer = styled.div`
     display: flex;
@@ -50,7 +52,7 @@ const Error = styled.div`
     margin-bottom: 2rem;
 `;
 
-const Form = () => {
+const Form = ( { updateResume, changeLoading } ) => {
 
     const [ data, keepData ] = useState({
         brand: '',
@@ -79,8 +81,38 @@ const Form = () => {
         }
         changeError(false);
 
+        // base in 2000
+        let result = 2000
+
         // get the value difference between years 
+        const difference = getDifferenceOfYear(year);
         
+        // for every year substract 3%
+        result -= ( (difference * 3) * result ) / 100;
+        
+        // increase the amount by brand. 30% european, 15% american, 5% asian
+        result = totalByBrand(brand) * result;
+
+        // increse the amount by plan. 20% basic, 50% complete
+        const amountPlan = getPlan(plan);
+
+        result = parseFloat( amountPlan * result).toFixed(2);
+       
+        // show the spinner
+        changeLoading(true);
+        // spinner disappear and shows the result
+        setTimeout( () => {
+        // eliminate spinner
+        changeLoading(false);
+        // gives the info to the principal component
+        updateResume({
+                quote: Number(result),
+                data
+            });
+        }, 2000);
+
+        
+
     }
     return( 
         <form
@@ -142,6 +174,11 @@ const Form = () => {
             <Button type="submit">Get Quote</Button>
         </form>
     )
+}
+
+Form.propTypes = {
+    updateResume: PropTypes.func.isRequired,
+    changeLoading: PropTypes.func.isRequired
 }
 
 export default Form;
